@@ -114,7 +114,7 @@ export class AppComponent implements OnInit {
         },
       });
     this.http
-      .get(`${this.apiURL}/${window.location.href}`)
+      .get(`${this.apiURL}/${encodeURIComponent(window.location.href)}`)
       .subscribe({
         next: (response) => {
           console.log('Data fetched successfully:', response);
