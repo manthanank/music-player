@@ -113,14 +113,16 @@ export class AppComponent implements OnInit {
           console.error('Error posting data:', error);
         },
       });
-    this.http.get(window.location.href).subscribe({
-      next: (response) => {
-        console.log('Data fetched successfully:', response);
-      },
-      error: (error) => {
-        console.error('Error fetching data:', error);
-      },
-    });
+    this.http
+      .get(this.apiURL, { params: { website: window.location.href } })
+      .subscribe({
+        next: (response) => {
+          console.log('Data fetched successfully:', response);
+        },
+        error: (error) => {
+          console.error('Error fetching data:', error);
+        },
+      });
     this.loadTrack();
     window.addEventListener('keydown', this.handleKeydown.bind(this));
   }
