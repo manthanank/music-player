@@ -25,7 +25,7 @@ interface Track {
 })
 export class AppComponent implements OnInit {
   title = 'music-player';
-  apiURL = environment.apiUrl;
+  apiURL = environment.apiUrl + '/visit';
 
   @ViewChild('trackListContainer') trackListContainer!: ElementRef;
   volume = signal(100);
