@@ -10,12 +10,8 @@ import {
   inject,
 } from '@angular/core';
 import { environment } from '../environments/environment';
+import { Track } from './models/track.model';
 
-interface Track {
-  title: string;
-  artist: string;
-  url: string;
-}
 
 @Component({
   selector: 'app-root',
