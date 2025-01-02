@@ -240,14 +240,6 @@ export class AppComponent implements OnInit {
     this.scrollToCurrentTrack();
   }
 
-  handleTrackSelect(index: number) {
-    this.currentTrackIndex.set(index);
-    this.loadTrack();
-    this.isPlaying.set(true);
-    this.audio?.play();
-    this.scrollToCurrentTrack();
-  }
-
   handleSeek(event: Event) {
     const input = event.target as HTMLInputElement;
     const value = parseFloat(input.value);
@@ -262,6 +254,19 @@ export class AppComponent implements OnInit {
   handleSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
+  }
+
+  handleTrackSelect(index: number) {
+    const trackIndex = this.tracks.findIndex(
+      (track) => track.title === this.filteredTracks()[index].title
+    );
+    if (trackIndex !== -1) {
+      this.currentTrackIndex.set(trackIndex);
+      this.loadTrack();
+      this.isPlaying.set(true);
+      this.audio?.play();
+      this.scrollToCurrentTrack();
+    }
   }
 
   toggleMute() {
