@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { environment } from '../environments/environment';
 import { Track } from './models/track.model';
-
+import { tracks } from './tracks';
 
 @Component({
   selector: 'app-root',
@@ -25,58 +25,7 @@ export class AppComponent implements OnInit {
 
   @ViewChild('trackListContainer') trackListContainer!: ElementRef;
   volume = signal(100);
-  tracks: Track[] = [
-    {
-      title: 'Serenity',
-      artist: 'Piano and Strings',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    },
-    {
-      title: 'Energetic Beats',
-      artist: 'Drum and Bass Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    },
-    {
-      title: 'Smooth Jazz',
-      artist: 'Sax and Keys',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    },
-    {
-      title: 'Classical Symphony',
-      artist: 'Orchestra Ensemble',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-    },
-    {
-      title: 'Electronic Dreams',
-      artist: 'Synthwave Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-    },
-    {
-      title: 'Ambient Relaxation',
-      artist: 'Chillout Lounge',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
-    },
-    {
-      title: 'Country Folk',
-      artist: 'Acoustic Guitar Trio',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
-    },
-    {
-      title: 'Rocking Blues',
-      artist: 'Electric Guitar Band',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3',
-    },
-    {
-      title: 'Hip Hop Beats',
-      artist: 'Rap Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3',
-    },
-    {
-      title: 'Reggae Vibes',
-      artist: 'Island Rhythms',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
-    },
-  ];
+  tracks = signal<Track[]>(tracks);
 
   currentTrackIndex = signal(0);
   isPlaying = signal(false);
@@ -87,7 +36,7 @@ export class AppComponent implements OnInit {
   currentTime = signal(0);
   duration = signal(0);
   filteredTracks = computed(() =>
-    this.tracks.filter((track) =>
+    this.tracks().filter((track) =>
       track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
     )
   );
@@ -156,7 +105,8 @@ export class AppComponent implements OnInit {
 
   loadTrack() {
     this.audio?.pause();
-    this.audio = new Audio(this.tracks[this.currentTrackIndex()].url);
+    const currentTrack = this.filteredTracks()[this.currentTrackIndex()];
+    this.audio = new Audio(currentTrack.url);
 
     this.audio.addEventListener('timeupdate', this.updateProgress.bind(this));
     this.audio.addEventListener('ended', this.handleNext.bind(this));
@@ -218,7 +168,7 @@ export class AppComponent implements OnInit {
 
   handleNext() {
     this.currentTrackIndex.set(
-      (this.currentTrackIndex() + 1) % this.tracks.length
+      (this.currentTrackIndex() + 1) % this.filteredTracks().length
     );
     this.loadTrack();
     this.isPlaying.set(true);
@@ -228,7 +178,7 @@ export class AppComponent implements OnInit {
 
   handlePrevious() {
     this.currentTrackIndex.set(
-      (this.currentTrackIndex() - 1 + this.tracks.length) % this.tracks.length
+      (this.currentTrackIndex() - 1 + this.filteredTracks().length) % this.filteredTracks().length
     );
     this.loadTrack();
     this.isPlaying.set(true);
@@ -253,7 +203,7 @@ export class AppComponent implements OnInit {
   }
 
   handleTrackSelect(index: number) {
-    const trackIndex = this.tracks.findIndex(
+    const trackIndex = this.tracks().findIndex(
       (track) => track.title === this.filteredTracks()[index].title
     );
     if (trackIndex !== -1) {
