@@ -47,7 +47,6 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.http
       .post(this.apiURL, {
-        website: window.location.href,
         projectName: this.title,
       })
       .subscribe({
