@@ -8,6 +8,7 @@ import {
   ViewChild,
   ElementRef,
   inject,
+  OnDestroy,
 } from '@angular/core';
 import { environment } from '../environments/environment';
 import { Track } from './models/track.model';
@@ -15,36 +16,66 @@ import { tracks } from './tracks';
 
 @Component({
   selector: 'app-root',
+  standalone: true, // Add standalone component
   imports: [NgClass],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'music-player';
   apiURL = environment.apiUrl + '/visit';
+  private readonly http = inject(HttpClient);
+  @ViewChild('trackListContainer')
+  private readonly trackListContainer!: ElementRef;
 
-  @ViewChild('trackListContainer') trackListContainer!: ElementRef;
-  volume = signal(100);
-  tracks = signal<Track[]>(tracks);
+  // Signals
+  protected readonly volume = signal(50); // Start at 50% volume
+  protected readonly tracks = signal<Track[]>(tracks);
+  protected readonly currentTrackIndex = signal(0);
+  protected readonly isPlaying = signal(false);
+  protected readonly progress = signal(0);
+  protected readonly error = signal<string | null>(null);
+  protected readonly searchQuery = signal('');
+  protected readonly isMuted = signal(false);
+  protected readonly currentTime = signal(0);
+  protected readonly duration = signal(0);
 
-  currentTrackIndex = signal(0);
-  isPlaying = signal(false);
-  progress = signal(0);
-  error = signal<string | null>(null);
-  searchQuery = signal('');
-  isMuted = signal(false);
-  currentTime = signal(0);
-  duration = signal(0);
-  filteredTracks = computed(() =>
-    this.tracks().filter((track) =>
-      track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
+  // Computed values
+  protected readonly filteredTracks = computed(() =>
+    this.tracks().filter(
+      (track) =>
+        track.title.toLowerCase().includes(this.searchQuery().toLowerCase()) ||
+        track.artist.toLowerCase().includes(this.searchQuery().toLowerCase())
     )
   );
+
   private audio: HTMLAudioElement | null = null;
+  private readonly audioContext = new AudioContext();
+  private gainNode: GainNode | null = null;
 
-  http = inject(HttpClient);
+  ngOnInit(): void {
+    this.initializeAudio();
+    this.logVisit();
+    window.addEventListener('keydown', this.handleKeydown.bind(this));
+  }
 
-  ngOnInit() {
+  ngOnDestroy(): void {
+    this.cleanup();
+  }
+
+  private initializeAudio(): void {
+    this.gainNode = this.audioContext.createGain();
+    this.gainNode.connect(this.audioContext.destination);
+    this.loadTrack();
+  }
+
+  private cleanup(): void {
+    window.removeEventListener('keydown', this.handleKeydown.bind(this));
+    this.audio?.pause();
+    this.audioContext.close();
+  }
+
+  private logVisit(): void {
     this.http
       .post(this.apiURL, {
         projectName: this.title,
@@ -57,12 +88,6 @@ export class AppComponent implements OnInit {
           console.error('Error posting data:', error);
         },
       });
-    this.loadTrack();
-    window.addEventListener('keydown', this.handleKeydown.bind(this));
-  }
-
-  ngOnDestroy() {
-    window.removeEventListener('keydown', this.handleKeydown.bind(this));
   }
 
   handleKeydown(event: KeyboardEvent) {
@@ -97,6 +122,7 @@ export class AppComponent implements OnInit {
     const currentTrack = this.filteredTracks()[this.currentTrackIndex()];
     this.audio = new Audio(currentTrack.url);
 
+    // Add existing event listeners
     this.audio.addEventListener('timeupdate', this.updateProgress.bind(this));
     this.audio.addEventListener('ended', this.handleNext.bind(this));
     this.audio.addEventListener('canplay', () => this.error.set(null));
@@ -104,8 +130,15 @@ export class AppComponent implements OnInit {
       this.error.set('Unable to load audio. Please check the audio source.');
       this.isPlaying.set(false);
     });
+
+    // Apply volume settings
     if (this.volume() !== null) {
       this.setVolume(this.volume());
+    }
+
+    // Apply mute state to new audio instance
+    if (this.audio) {
+      this.audio.muted = this.isMuted();
     }
   }
 
@@ -167,7 +200,8 @@ export class AppComponent implements OnInit {
 
   handlePrevious() {
     this.currentTrackIndex.set(
-      (this.currentTrackIndex() - 1 + this.filteredTracks().length) % this.filteredTracks().length
+      (this.currentTrackIndex() - 1 + this.filteredTracks().length) %
+        this.filteredTracks().length
     );
     this.loadTrack();
     this.isPlaying.set(true);

@@ -1,10 +1,15 @@
-<div class="w-full h-screen flex flex-col items-center justify-center p-6 bg-gray-800 text-white">
+<div
+  class="w-full min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-gray-900 to-gray-800 text-white">
   <header class="w-full max-w-md mb-8">
-    <h1 class="text-3xl font-bold text-center">Music Player</h1>
+    <h1
+      class="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+      Music Player
+    </h1>
   </header>
 
+  <!-- Error Message -->
   @if (error()) {
-  <div class="bg-red-500 p-4 mb-4 rounded w-full max-w-md">
+  <div role="alert" class="bg-red-500/90 p-4 mb-4 rounded-lg w-full max-w-md animate-fade-in">
     <div class="flex items-center">
       <i class="material-icons mr-2">error_outline</i>
       <div>
@@ -16,75 +21,74 @@
   }
 
   <!-- Search Bar -->
-  <div class="relative mb-4 w-full max-w-md">
-    <input type="text" placeholder="Search tracks..." (input)="handleSearch($event)"
-      class="w-full p-2 rounded bg-gray-700 text-white" />
+  <div class="relative mb-6 w-full max-w-md">
+    <div class="relative">
+      <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+      <input type="search" placeholder="Search tracks or artists..." (input)="handleSearch($event)"
+        class="w-full p-3 pl-10 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:border-blue-400 focus:outline-none transition-colors"
+        aria-label="Search tracks or artists" />
+    </div>
   </div>
 
   <!-- Current Track Info -->
-  <div class="text-center mb-4 w-full max-w-md">
-    <h2 class="text-2xl font-bold">{{ tracks()[currentTrackIndex()].title }}</h2>
-    <p class="text-gray-400">{{ tracks()[currentTrackIndex()].artist }}</p>
+  <div class="text-center mb-6 w-full max-w-md">
+    <h2 class="text-2xl font-bold truncate">{{ tracks()[currentTrackIndex()].title }}</h2>
+    <p class="text-gray-400 truncate">{{ tracks()[currentTrackIndex()].artist }}</p>
   </div>
 
-  <!-- Player Controls -->
-  <div class="flex justify-center space-x-4 mb-6 w-full max-w-md">
-    <button (click)="handlePrevious()" class="btn">
+  <!-- Player Controls with Improved Accessibility -->
+  <div class="flex justify-center space-x-6 mb-6 w-full max-w-md">
+    <button (click)="handlePrevious()" class="btn hover:scale-110 transition-transform" aria-label="Previous track">
       <i class="fas fa-step-backward"></i>
     </button>
-    <button (click)="handlePlayPause()" class="btn">
-      @if (isPlaying()) {
-      <i class="fas fa-pause"></i>
-      }
-      @else {
-      <i class="fas fa-play"></i>
-      }
+    <button (click)="handlePlayPause()" class="btn hover:scale-110 transition-transform"
+      [attr.aria-label]="isPlaying() ? 'Pause' : 'Play'">
+      <i class="fas" [ngClass]="isPlaying() ? 'fa-pause' : 'fa-play'"></i>
     </button>
-    <button (click)="handleNext()" class="btn">
+    <button (click)="handleNext()" class="btn hover:scale-110 transition-transform" aria-label="Next track">
       <i class="fas fa-step-forward"></i>
     </button>
-    <button (click)="toggleMute()" class="btn">
-      <i class="fas" [ngClass]="{ 'fa-volume-mute': isMuted(), 'fa-volume-up': !isMuted() }"></i>
+    <button (click)="toggleMute()" class="btn hover:scale-110 transition-transform"
+      [attr.aria-label]="isMuted() ? 'Unmute' : 'Mute'">
+      <i class="fas" [ngClass]="isMuted() ? 'fa-volume-mute' : 'fa-volume-up'"></i>
     </button>
   </div>
 
-  <!-- Current Track Duration and Custom Slider -->
-  <div class="flex items-center justify-between mb-4 w-full max-w-md">
-    <span class="text-sm text-gray-400">{{ formatTime(currentTime()) }}</span>
-    <div class="relative flex-1 mx-2">
+  <!-- Progress Bar -->
+  <div class="flex items-center justify-between mb-6 w-full max-w-md">
+    <span class="text-sm text-gray-400 min-w-[40px]">{{ formatTime(currentTime()) }}</span>
+    <div class="relative flex-1 mx-4">
       <input type="range" min="0" max="100" [value]="progress()" (input)="handleSeek($event)"
-        class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
+        class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer" aria-label="Seek" />
+      <div class="absolute h-2 bg-blue-500 rounded-lg" [style.width.%]="progress()"></div>
     </div>
-    <span class="text-sm text-gray-400">{{ formatTime(duration()) }}</span>
+    <span class="text-sm text-gray-400 min-w-[40px]">{{ formatTime(duration()) }}</span>
   </div>
 
-  <!-- Volume Control -->
-  <div class="relative mb-4 w-full max-w-md flex items-center">
-    <button (click)="decreaseVolume()" class="volume-btn mr-2">-</button>
-    <input type="range" min="0" max="100" [value]="volume()" (input)="handleVolumeChange($event)"
-      class="w-full h-4 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
-    <span class="absolute left-1/2 transform -translate-x-1/2">{{ volume() }}%</span>
-    <button (click)="increaseVolume()" class="volume-btn ml-2">+</button>
-  </div>
-
-  <!-- Track List -->
-  <h3 class="text-xl font-semibold mb-2">Track List</h3>
-  <div class="h-[200px] w-full max-w-md rounded-md border border-gray-700 p-4 overflow-y-auto custom-scrollbar"
-    #trackListContainer>
+  <!-- Track List with Virtual Scrolling -->
+  <h3 class="text-xl font-semibold mb-4">Track List</h3>
+  <div #trackListContainer
+    class="h-[300px] w-full max-w-md rounded-lg border border-gray-700 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
     @for (track of filteredTracks(); track $index) {
-    <div class="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
-      [ngClass]="{ 'bg-gray-700': $index === currentTrackIndex() }" (click)="handleTrackSelect($index)">
-      <p class="font-medium">{{ track.title }}</p>
-      <p class="text-sm text-gray-400">{{ track.artist }}</p>
+    <div class="p-3 mb-2 cursor-pointer rounded-lg transition-colors"
+      [ngClass]="{ 'bg-blue-500/20': $index === currentTrackIndex(), 'hover:bg-gray-700/50': $index !== currentTrackIndex() }"
+      (click)="handleTrackSelect($index)" role="button"
+      [attr.aria-label]="'Play ' + track.title + ' by ' + track.artist">
+      <p class="font-medium truncate">{{ track.title }}</p>
+      <p class="text-sm text-gray-400 truncate">{{ track.artist }}</p>
     </div>
-    }
-    @empty {
-    <p class="text-gray-400">No tracks found</p>
+    } @empty {
+    <p class="text-gray-400 text-center">No tracks found</p>
     }
   </div>
-  <footer class="w-full max-w-md mt-4 text-center">
-    <p class="text-sm text-gray-400">Made by
-      <a href="https://manthanank.github.io/" class="text-blue-400">Manthan Ankolekar</a>
+
+  <footer class="w-full max-w-md mt-6 text-center">
+    <p class="text-sm text-gray-400">
+      Made with ❤️ by
+      <a href="https://manthanank.github.io/" class="text-blue-400 hover:text-blue-300 transition-colors"
+        target="_blank" rel="noopener noreferrer">
+        Manthan Ankolekar
+      </a>
     </p>
   </footer>
 </div>
