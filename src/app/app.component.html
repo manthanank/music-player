@@ -1,8 +1,17 @@
 <div
-  class="w-full min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+  class="w-full min-h-screen flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-900 text-gray-800 dark:text-white transition-colors duration-300">
+  
+  <!-- Theme Toggle Button -->
+  <button 
+    (click)="toggleTheme()" 
+    class="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white transition-colors duration-300"
+    aria-label="Toggle theme">
+    <i class="fas" [ngClass]="isDarkMode() ? 'fa-sun' : 'fa-moon'"></i>
+  </button>
+
   <header class="w-full max-w-md mb-8">
     <h1
-      class="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+      class="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-700 dark:from-blue-400 dark:to-purple-500">
       Music Player
     </h1>
   </header>
@@ -25,7 +34,7 @@
     <div class="relative">
       <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
       <input type="search" placeholder="Search tracks or artists..." (input)="handleSearch($event)"
-        class="w-full p-3 pl-10 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:border-blue-400 focus:outline-none transition-colors"
+        class="w-full p-3 pl-10 rounded-lg bg-white/90 dark:bg-gray-700/50 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:border-blue-400 focus:outline-none transition-colors"
         aria-label="Search tracks or artists" />
     </div>
   </div>
@@ -33,22 +42,22 @@
   <!-- Current Track Info -->
   <div class="text-center mb-6 w-full max-w-md">
     <h2 class="text-2xl font-bold truncate">{{ tracks()[currentTrackIndex()].title }}</h2>
-    <p class="text-gray-400 truncate">{{ tracks()[currentTrackIndex()].artist }}</p>
+    <p class="text-gray-600 dark:text-gray-400 truncate">{{ tracks()[currentTrackIndex()].artist }}</p>
   </div>
 
   <!-- Player Controls with Improved Accessibility -->
   <div class="flex justify-center space-x-6 mb-6 w-full max-w-md">
-    <button (click)="handlePrevious()" class="btn hover:scale-110 transition-transform" aria-label="Previous track">
+    <button (click)="handlePrevious()" class="btn hover:scale-110 transition-transform bg-gray-200/80 dark:bg-gray-700/50" aria-label="Previous track">
       <i class="fas fa-step-backward"></i>
     </button>
-    <button (click)="handlePlayPause()" class="btn hover:scale-110 transition-transform"
+    <button (click)="handlePlayPause()" class="btn hover:scale-110 transition-transform bg-gray-200/80 dark:bg-gray-700/50"
       [attr.aria-label]="isPlaying() ? 'Pause' : 'Play'">
       <i class="fas" [ngClass]="isPlaying() ? 'fa-pause' : 'fa-play'"></i>
     </button>
-    <button (click)="handleNext()" class="btn hover:scale-110 transition-transform" aria-label="Next track">
+    <button (click)="handleNext()" class="btn hover:scale-110 transition-transform bg-gray-200/80 dark:bg-gray-700/50" aria-label="Next track">
       <i class="fas fa-step-forward"></i>
     </button>
-    <button (click)="toggleMute()" class="btn hover:scale-110 transition-transform"
+    <button (click)="toggleMute()" class="btn hover:scale-110 transition-transform bg-gray-200/80 dark:bg-gray-700/50"
       [attr.aria-label]="isMuted() ? 'Unmute' : 'Mute'">
       <i class="fas" [ngClass]="isMuted() ? 'fa-volume-mute' : 'fa-volume-up'"></i>
     </button>
@@ -56,39 +65,54 @@
 
   <!-- Progress Bar -->
   <div class="flex items-center justify-between mb-6 w-full max-w-md">
-    <span class="text-sm text-gray-400 min-w-[40px]">{{ formatTime(currentTime()) }}</span>
+    <span class="text-sm text-gray-600 dark:text-gray-400 min-w-[40px]">{{ formatTime(currentTime()) }}</span>
     <div class="relative flex-1 mx-4">
       <input type="range" min="0" max="100" [value]="progress()" (input)="handleSeek($event)"
-        class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer" aria-label="Seek" />
-      <div class="absolute h-2 bg-blue-500 rounded-lg" [style.width.%]="progress()"></div>
+        class="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer" aria-label="Seek" />
+      <div class="absolute h-2 bg-blue-600 dark:bg-blue-500 rounded-lg" [style.width.%]="progress()"></div>
     </div>
-    <span class="text-sm text-gray-400 min-w-[40px]">{{ formatTime(duration()) }}</span>
+    <span class="text-sm text-gray-600 dark:text-gray-400 min-w-[40px]">{{ formatTime(duration()) }}</span>
   </div>
 
   <!-- Track List with Virtual Scrolling -->
   <h3 class="text-xl font-semibold mb-4">Track List</h3>
   <div #trackListContainer
-    class="h-[300px] w-full max-w-md rounded-lg border border-gray-700 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+    class="h-[300px] w-full max-w-md rounded-lg border border-gray-300 dark:border-gray-700 p-4 overflow-y-auto scrollbar-thin bg-white/80 dark:bg-gray-800/30 scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
     @for (track of filteredTracks(); track $index) {
     <div class="p-3 mb-2 cursor-pointer rounded-lg transition-colors"
-      [ngClass]="{ 'bg-blue-500/20': $index === currentTrackIndex(), 'hover:bg-gray-700/50': $index !== currentTrackIndex() }"
+      [ngClass]="{ 'bg-blue-500/20': $index === currentTrackIndex(), 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50': $index !== currentTrackIndex() }"
       (click)="handleTrackSelect($index)" role="button"
       [attr.aria-label]="'Play ' + track.title + ' by ' + track.artist">
       <p class="font-medium truncate">{{ track.title }}</p>
-      <p class="text-sm text-gray-400 truncate">{{ track.artist }}</p>
+      <p class="text-sm text-gray-600 dark:text-gray-400 truncate">{{ track.artist }}</p>
     </div>
     } @empty {
-    <p class="text-gray-400 text-center">No tracks found</p>
+    <p class="text-gray-600 dark:text-gray-400 text-center">No tracks found</p>
     }
   </div>
 
+  <!-- Footer section for visitor count -->
   <footer class="w-full max-w-md mt-6 text-center">
-    <p class="text-sm text-gray-400">
+    <p class="text-sm text-gray-600 dark:text-gray-400">
       Made with ❤️ by
-      <a href="https://manthanank.github.io/" class="text-blue-400 hover:text-blue-300 transition-colors"
+      <a href="https://manthanank.github.io/" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
         target="_blank" rel="noopener noreferrer">
         Manthan Ankolekar
       </a>
     </p>
+    
+    <!-- Visitor Count -->
+    <div class="flex items-center justify-center mt-2">
+      <i class="fas fa-users text-gray-500 dark:text-gray-400 mr-1 text-xs"></i>
+      @if (isLoadingVisitorCount()) {
+        <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+          <i class="fas fa-spinner fa-spin mr-1"></i> Loading visitors...
+        </span>
+      } @else {
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          {{ visitorCount() }} {{ visitorCount() === 1 ? 'visitor' : 'visitors' }}
+        </span>
+      }
+    </div>
   </footer>
 </div>

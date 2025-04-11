@@ -13,10 +13,11 @@ import {
 import { environment } from '../environments/environment';
 import { Track } from './models/track.model';
 import { tracks } from './tracks';
+import { ThemeService } from './services/theme.service';
+import { VisitorResponse } from './models/visit.model';
 
 @Component({
   selector: 'app-root',
-  standalone: true, // Add standalone component
   imports: [NgClass],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -25,8 +26,23 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'music-player';
   apiURL = environment.apiUrl + '/visit';
   private readonly http = inject(HttpClient);
+  private readonly themeService = inject(ThemeService);
   @ViewChild('trackListContainer')
   private readonly trackListContainer!: ElementRef;
+
+  // Add visitor count signal
+  protected readonly visitorCount = signal<number>(0);
+  protected readonly isLoadingVisitorCount = signal<boolean>(true);
+
+  // Expose isDarkMode signal to template
+  protected get isDarkMode() {
+    return this.themeService.isDarkMode;
+  }
+
+  // Add theme toggle method
+  protected toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
 
   // Signals
   protected readonly volume = signal(50); // Start at 50% volume
@@ -75,17 +91,25 @@ export class AppComponent implements OnInit, OnDestroy {
     this.audioContext.close();
   }
 
+  // Update logVisit method to handle the updated API response format
   private logVisit(): void {
     this.http
-      .post(this.apiURL, {
+      .post<VisitorResponse>(this.apiURL, {
         projectName: this.title,
       })
       .subscribe({
         next: (response) => {
-          console.log('Data posted successfully:', response);
+          // console.log('Data posted successfully:', response);
+          // Handle both response formats (uniqueVisitors or visitorCount)
+          const count = response.uniqueVisitors ?? response.visitorCount;
+          if (count !== undefined) {
+            this.visitorCount.set(count);
+          }
+          this.isLoadingVisitorCount.set(false);
         },
         error: (error) => {
           console.error('Error posting data:', error);
+          this.isLoadingVisitorCount.set(false);
         },
       });
   }

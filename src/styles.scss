@@ -3,6 +3,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 body {
-  @apply bg-gray-800;
+  @apply bg-white dark:bg-gray-900;
+  transition: background-color 0.3s ease;
+}
+
+/* Button styles */
+.btn {
+  @apply p-3 rounded-full transition-all duration-300;
+}
+
+/* Dark mode specific utilities */
+.dark {
+  color-scheme: dark;
+}
+
+/* Light mode specific utilities */
+html:not(.dark) {
+  color-scheme: light;
+}
+
+/* Add custom scrollbar styling */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500 dark:bg-gray-500;
 }
